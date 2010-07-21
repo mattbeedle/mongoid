@@ -36,5 +36,11 @@ describe Mongoid::Associations::Options do
       @booky_wook.ratings.create! :score => 10
       @booky_wook.ratings.first.ratable_type.should == @booky_wook.class.to_s
     end
+
+    it 'allows a child to be created by passing the parent' do
+      rating = Rating.create! :ratable => @paris
+      rating.ratable.should == @paris
+      @paris.reload.ratings.first.should == rating
+    end
   end
 end
