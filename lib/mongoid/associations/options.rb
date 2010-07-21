@@ -22,8 +22,21 @@ module Mongoid #:nodoc:
       # Return the foreign key if it exists, otherwise inflect it from the
       # associated class name.
       def foreign_key
-        key = self[:foreign_key] || klass.name.to_s.foreign_key
-        key.to_s
+        key = if as
+          as.to_s.foreign_key
+        else
+          key = self[:foreign_key] || klass.name.to_s.foreign_key
+          key.to_s
+        end
+      end
+
+      def foreign_type
+        "#{name}_type"
+      end
+
+      # Return the "as" option used in polymorphic associations
+      def as
+        self[:as]
       end
 
       # Returns the name of the inverse_of association

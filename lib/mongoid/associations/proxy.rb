@@ -26,6 +26,7 @@ module Mongoid #:nodoc
         @klass = options.klass
         @options = options
         @foreign_key = options.foreign_key
+        @foreign_type = "#{options.as.to_s}_type" if options.as
         extends(options)
       end
     end

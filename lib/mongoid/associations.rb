@@ -178,6 +178,10 @@ module Mongoid # :nodoc:
         associate(Associations::ReferencedIn, opts)
         field(opts.foreign_key, :type => Mongoid.use_object_ids ? BSON::ObjectID : String)
         index(opts.foreign_key) unless embedded?
+        if options[:polymorphic]
+          field(opts.foreign_type)
+          index(opts.foreign_type) unless embedded?
+        end
         set_callback(:save, :before) { |document| document.update_foreign_keys }
       end
 
