@@ -54,6 +54,16 @@ namespace :db do
     end
   end
 
+  if not Rake::Task.task_defined?("db:create_indexes")
+    desc 'Create the indexes defined on your mongoid models'
+    task :create_indexes do
+      # force mongoid to create indexes
+      ENV["MONGOID_CREATE_INDEXES"] = "true"
+      Rake::Task["environment"].invoke
+    end
+  end
+
+
   ########
   # TODO: lots more useful db tasks can be added here. stuff like copyDatabase, etc
   ########

@@ -16,10 +16,13 @@ Mongoid.configure do |config|
   name = "mongoid_test"
   host = "localhost"
   config.master = Mongo::Connection.new.db(name)
+  config.logger = nil
   # config.slaves = [
     # Mongo::Connection.new(host, 27018, :slave_ok => true).db(name)
   # ]
 end
+
+Mongoid.use_object_ids = ENV['MONGOID_USE_OBJECT_IDS'] == "true"
 
 Dir[ File.join(MODELS, "*.rb") ].sort.each { |file| require File.basename(file) }
 
@@ -29,4 +32,3 @@ Rspec.configure do |config|
     Mongoid.master.collections.select {|c| c.name !~ /system/ }.each(&:drop)
   end
 end
-

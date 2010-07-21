@@ -11,6 +11,7 @@ module Mongoid #:nodoc:
         load_target
         objects.flatten.each do |object|
           object.send("#{@foreign_key}=", @parent.id)
+          object.send("#{@foreign_type}=", @parent.class.to_s) if @foreign_type
           @target << object
           object.save unless @parent.new_record?
         end
@@ -26,8 +27,16 @@ module Mongoid #:nodoc:
       # Returns the newly created object.
       def build(attributes = nil)
         load_target
-        name = @parent.class.to_s.underscore
-        object = @klass.instantiate((attributes || {}).merge(name => @parent))
+
+        if @foreign_type
+          name = determine_name
+          object = @klass.instantiate((attributes || {}).
+                                      merge("#{name}_id" => @parent.id,
+                                      "#{name}_type" => @parent.class.to_s))
+        else
+          name = determine_name
+          object = @klass.instantiate((attributes || {}).merge(name => @parent))
+        end
         @target << object
         object
       end
@@ -144,6 +153,11 @@ module Mongoid #:nodoc:
         @target = @target.entries if @parent.new_record?
       end
 
+      def determine_name
+        @proxy ||= class << self; self; end
+        @proxy.send(:determine_name, @parent, @options)
+      end
+
       # The default query used for retrieving the documents from the database.
       # In this case we use the common API between Mongoid, ActiveRecord, and
       # DataMapper so we can do one-to-many relationships with data in other
@@ -159,7 +173,15 @@ module Mongoid #:nodoc:
       #   An +Array+ of objects if an ActiveRecord association
       #   A +Collection+ if a DataMapper association.
       def query
-        @query ||= lambda { @klass.all(:conditions => { @foreign_key => @parent.id }) }
+        conditions = { @foreign_key => @parent.id }
+        @query ||=
+          if @foreign_type
+            lambda do
+              @klass.all(:conditions => conditions.merge(@foreign_type => @parent.class.to_s))
+            end
+          else
+            lambda { @klass.all(:conditions => conditions) }
+          end
       end
 
       # Remove the objects based on conditions.
@@ -212,9 +234,27 @@ module Mongoid #:nodoc:
         #
         # <tt>RelatesToOne.update(game, person, options)</tt>
         def update(target, document, options)
-          name = document.class.to_s.underscore
+          name = determine_name(document, options)
           target.each { |child| child.send("#{name}=", document) }
           instantiate(document, options, target)
+        end
+
+        protected
+        def determine_name(document, options)
+          target = document.class
+
+          if (inverse = options.inverse_of) && inverse.is_a?(Array)
+            inverse = [*inverse].detect { |name| target.respond_to?(name) }
+          end
+
+          if !inverse and !options.as
+            association = options.klass.associations.values.detect do |metadata|
+              metadata.options.klass == target
+            end
+            inverse = association.name if association
+          end
+
+          options.as || inverse || target.to_s.underscore
         end
       end
     end

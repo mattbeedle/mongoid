@@ -13,7 +13,11 @@ module Mongoid #:nodoc:
       # options: The association +Options+.
       def initialize(document, foreign_key, options, target = nil)
         @options = options
-        @target = target || options.klass.find(foreign_key)
+        if options.polymorphic
+          @target = document.send("#{options.name}_type").constantize.find(foreign_key)
+        else
+          @target = target || options.klass.find(foreign_key)
+        end
         extends(options)
       end
 
@@ -51,6 +55,10 @@ module Mongoid #:nodoc:
         # <tt>ReferencedIn.update(person, game, options)</tt>
         def update(target, document, options)
           document.send("#{options.foreign_key}=", target ? target.id : nil)
+
+          if options.polymorphic
+            document.send("#{options.foreign_type}=", target ? target.class.to_s : nil)
+          end
           instantiate(document, options, target)
         end
       end

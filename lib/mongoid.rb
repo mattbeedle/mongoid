@@ -63,6 +63,7 @@ require "mongoid/hierarchy"
 require "mongoid/identity"
 require "mongoid/indexes"
 require "mongoid/javascript"
+require "mongoid/logger"
 require "mongoid/matchers"
 require "mongoid/memoization"
 require "mongoid/named_scope"
@@ -111,7 +112,7 @@ module Mongoid #:nodoc
       block_given? ? yield(config) : config
     end
 
-    # Easy convenience method for having an alert generated from the
+    # Easy convenience method for generating an alert from the
     # deprecation module.
     #
     # Example:

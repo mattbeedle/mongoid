@@ -178,6 +178,10 @@ module Mongoid # :nodoc:
         associate(Associations::ReferencedIn, opts)
         field(opts.foreign_key, :type => Mongoid.use_object_ids ? BSON::ObjectID : String)
         index(opts.foreign_key) unless embedded?
+        if options[:polymorphic]
+          field(opts.foreign_type)
+          index(opts.foreign_type) unless embedded?
+        end
         set_callback(:save, :before) { |document| document.update_foreign_keys }
       end
 
@@ -229,8 +233,8 @@ module Mongoid # :nodoc:
 
       alias :has_one_related :references_one
 
-      # Returns the macro associated with the supplied association name. This
-      # will return embeds_on, embeds_many, embedded_in or nil.
+      # Returns the association reflection object with the supplied association
+      # name.
       #
       # Options:
       #
@@ -241,7 +245,6 @@ module Mongoid # :nodoc:
       # <tt>Person.reflect_on_association(:addresses)</tt>
       def reflect_on_association(name)
         association = associations[name.to_s]
-        association ? association.macro : nil
       end
 
       protected
