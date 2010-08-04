@@ -3,15 +3,6 @@ module Mongoid #:nodoc:
   class Field
     attr_reader :name, :type
 
-    # Determine if the field is able to be accessible via a mass update.
-    #
-    # Returns:
-    #
-    # true if accessible, false if not.
-    def accessible?
-      !!@accessible
-    end
-
     # Get the declared options for this field
     #
     # Returns:
@@ -25,9 +16,9 @@ module Mongoid #:nodoc:
     #
     # Returns:
     #
-    # The primitive value or a copy of the default.
+    # The typecast default value.
     def default
-      copy
+      copy.respond_to?(:call) ? copy : set(copy)
     end
 
     # Create the new field with a name and optional additional options. Valid
@@ -46,7 +37,6 @@ module Mongoid #:nodoc:
       @type = options[:type] || String
       @name, @default = name, options[:default]
       @copyable = (@default.is_a?(Array) || @default.is_a?(Hash))
-      @accessible = options.has_key?(:accessible) ? options[:accessible] : true
       @options = options
       check_default!
     end

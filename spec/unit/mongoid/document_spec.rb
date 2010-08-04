@@ -12,6 +12,10 @@ describe Mongoid::Document do
     @canvas_collection.stubs(:create_index).with(:_type, false)
   end
 
+  it "does not respond to _destroy" do
+    Person.new.should_not respond_to(:_destroy)
+  end
+
   describe "#==" do
 
     context "when other object is a Document" do
@@ -218,12 +222,20 @@ describe Mongoid::Document do
 
   end
 
-  describe ".hereditary" do
+  describe ".hereditary?" do
 
-    context "when the class is part of a hierarchy" do
+    context "when the class is the root of a hierarchy" do
+
+      it "returns false" do
+        Canvas.should_not be_hereditary
+      end
+
+    end
+
+    context "when the class is a part of a hierarchy" do
 
       it "returns true" do
-        Canvas.hereditary.should be_true
+        Browser.should be_hereditary
       end
 
     end
@@ -231,7 +243,7 @@ describe Mongoid::Document do
     context "when the class is not part of a hierarchy" do
 
       it "returns false" do
-        Game.hereditary.should be_false
+        Game.should_not be_hereditary
       end
 
     end
@@ -338,19 +350,15 @@ describe Mongoid::Document do
         it "sets the primary key" do
           @address.id.should == "test"
         end
-
       end
-
     end
 
     context "without a type specified" do
 
       it "sets the type" do
-        Person.new._type.should == "Person"
+        Doctor.new._type.should == "Doctor"
       end
-
     end
-
   end
 
   describe ".instantiate" do
@@ -376,50 +384,6 @@ describe Mongoid::Document do
       it "sets the attributes directly" do
         person = Person.instantiate(nil)
         person.id.should_not be_nil
-      end
-
-    end
-
-  end
-
-  describe ".key" do
-
-    context "when key is single field" do
-
-      before do
-        Address.key :street
-        @address = Address.new(:street => "Testing Street Name")
-      end
-
-      it "adds the callback for primary key generation" do
-        @address.run_callbacks(:save)
-        @address.id.should == "testing-street-name"
-      end
-
-    end
-
-    context "when key is composite" do
-
-      before do
-        Address.key :street, :post_code
-        @address = Address.new(:street => "Testing Street Name", :post_code => "94123")
-      end
-
-      it "combines all fields" do
-        @address.run_callbacks(:save)
-        @address.id.should == "testing-street-name-94123"
-      end
-
-    end
-
-    context "when key is on a subclass" do
-
-      before do
-        Firefox.key :name
-      end
-
-      it "sets the key for the entire hierarchy" do
-        Canvas.primary_key.should == [:name]
       end
 
     end

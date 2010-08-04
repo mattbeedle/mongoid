@@ -3,6 +3,7 @@ require "mongoid/criterion/complex"
 require "mongoid/criterion/exclusion"
 require "mongoid/criterion/inclusion"
 require "mongoid/criterion/optional"
+require "mongoid/criterion/selector"
 
 module Mongoid #:nodoc:
   # The +Criteria+ class is the core object needed in Mongoid to retrieve
@@ -63,12 +64,6 @@ module Mongoid #:nodoc:
       end
     end
 
-    # Returns true if the supplied +Object+ is an instance of +Criteria+ or
-    # +Scope+.
-    def self.===(other)
-      super || Scope === other
-    end
-
     # Return or create the context in which this criteria should be executed.
     #
     # This will return an Enumerable context if the class is embedded,
@@ -122,7 +117,8 @@ module Mongoid #:nodoc:
     # type: One of :all, :first:, or :last
     # klass: The class to execute on.
     def initialize(klass)
-      @selector, @options, @klass, @documents = {}, {}, klass, []
+      @selector = Mongoid::Criterion::Selector.new(klass)
+      @options, @klass, @documents = {}, klass, []
     end
 
     # Merges another object into this +Criteria+. The other object may be a
@@ -153,9 +149,9 @@ module Mongoid #:nodoc:
     # Returns: <tt>Criteria</tt>
     def method_missing(name, *args)
       if @klass.respond_to?(name)
-        new_scope = @klass.send(name, *args)
-        new_scope.merge(self) if Criteria === new_scope
-        return new_scope
+        @klass.send(:with_scope, self) do
+          @klass.send(name, *args)
+        end
       else
         return entries.send(name, *args)
       end

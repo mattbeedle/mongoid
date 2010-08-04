@@ -9,6 +9,12 @@ module Mongoid #:nodoc:
         self.merge!(attributes)
       end
 
+      # For relational associations we want to know if we cascade deletes or
+      # destroys to associations.
+      def dependent
+        self[:dependent]
+      end
+
       # Returns the extension if it exists, nil if not.
       def extension
         self[:extend]
@@ -37,6 +43,11 @@ module Mongoid #:nodoc:
       # Return the "as" option used in polymorphic associations
       def as
         self[:as]
+      end
+
+      # Returns whether the foreign key column is indexed.
+      def index
+        self[:index] || false
       end
 
       # Returns the name of the inverse_of association
