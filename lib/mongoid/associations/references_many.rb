@@ -244,11 +244,9 @@ module Mongoid #:nodoc:
         protected
         def determine_name(document, options)
           target = document.class
-
           if (inverse = options.inverse_of) && inverse.is_a?(Array)
             inverse = [*inverse].detect { |name| target.respond_to?(name) }
           end
-
           if !inverse and !options.as
             association = detect_association(target, options, false)
             association = detect_association(target, options, true) if association.blank?

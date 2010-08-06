@@ -606,7 +606,11 @@ describe Mongoid::Associations do
       end
 
       it "sets the foreign key as an object id" do
-        Game.expects(:field).with("person_id", :type => BSON::ObjectID)
+        Game.expects(:field).with(
+          "person_id",
+          :inverse_class_name => "Person",
+          :identity => true
+        )
         Game.referenced_in :person
       end
     end
@@ -678,6 +682,10 @@ describe Mongoid::Associations do
           Person.allocate.should respond_to(:preference_ids)
         end
 
+        it "creates an array field with identity set to true" do
+          Person.fields["preference_ids"].options[:identity].should be_true
+        end
+
         context "when index is set to true" do
 
           it "adds an index on the association field" do
@@ -691,6 +699,7 @@ describe Mongoid::Associations do
   describe "#update_foreign_keys" do
 
     before do
+      Person.identity :type => BSON::ObjectID
       @game = Game.new(:score => 1)
       @person = Person.new(:title => "Sir", :game => @game)
     end

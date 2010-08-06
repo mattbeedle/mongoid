@@ -1,13 +1,13 @@
 # encoding: utf-8
 module Mongoid #:nodoc:
   class Field
-    attr_reader :name, :type
+    attr_reader :klass, :name, :type
 
     # Get the declared options for this field
     #
     # Returns:
     #
-    # a hash of options 
+    # a hash of options
     def options
       @options
     end
@@ -44,7 +44,12 @@ module Mongoid #:nodoc:
     # Used for setting an object in the attributes hash. If nil is provided the
     # default will get returned if it exists.
     def set(object)
-      type.set(object)
+      unless @options[:identity]
+        type.set(object)
+      else
+        inverse = @options[:inverse_class_name].constantize
+        object.blank? ? type.set(object) : BSON::ObjectID.cast!(inverse, object)
+      end
     end
 
     # Used for retrieving the object out of the attributes hash.
@@ -60,7 +65,9 @@ module Mongoid #:nodoc:
 
     # Check if the name is valid.
     def check_name!(name)
-      raise Mongoid::Errors::InvalidField.new(name) if Mongoid.destructive_fields.include?(name.to_s)
+      if Mongoid.destructive_fields.include?(name.to_s)
+        raise Mongoid::Errors::InvalidField.new(name)
+      end
     end
 
     def check_default!
