@@ -27,7 +27,6 @@ module Mongoid #:nodoc:
       # Returns the newly created object.
       def build(attributes = nil)
         load_target
-
         if @foreign_type
           name = determine_name
           object = @klass.instantiate((attributes || {}).
@@ -252,7 +251,10 @@ module Mongoid #:nodoc:
             association = detect_association(target, options, true) if association.blank?
             inferred = association.name if association
           end
+<<<<<<< HEAD
 
+=======
+>>>>>>> polymorphic
           options.as || inverse || inferred || target.to_s.underscore
         end
 

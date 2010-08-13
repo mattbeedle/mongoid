@@ -47,9 +47,20 @@ module Mongoid #:nodoc:
       unless @options[:identity]
         type.set(object)
       else
-        inverse = @options[:inverse_class_name].constantize
+        if class_exists?(@options[:inverse_class_name])
+          inverse = @options[:inverse_class_name].constantize
+        else
+          inverse = @options[:klass]
+        end
         object.blank? ? type.set(object) : BSON::ObjectID.cast!(inverse, object)
       end
+    end
+
+    def class_exists?(class_name)
+      klass = Module.const_get(class_name)
+      return klass.is_a?(Class)
+    rescue NameError
+      return false
     end
 
     # Used for retrieving the object out of the attributes hash.

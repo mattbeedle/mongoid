@@ -43,4 +43,38 @@ describe Mongoid::Associations::Options do
       @paris.reload.ratings.first.should == rating
     end
   end
+
+  context "when the parent is new" do
+    let(:movie) { Movie.new }
+    let!(:rating) { movie.ratings.build }
+
+    it "appends the document to the association" do
+      movie.ratings.first.should == rating
+    end
+
+    it "sets the reverse association's ids" do
+      rating.ratable.should == movie
+      rating.ratable_id.should == movie.id
+      rating.ratable_type.should == movie.class.name
+    end
+  end
+
+  context "when the parent is not new" do
+    let(:avatar) do
+      Movie.new.tap do |movie|
+        movie.instance_variable_set(:@new_record, false)
+      end
+    end
+    let!(:rating) { avatar.ratings.build }
+
+    it "appends the document to the association" do
+      avatar.ratings.first.should == rating
+    end
+
+    it "sets the reverse association's ids" do
+      rating.ratable.should == avatar
+      rating.ratable_id.should == avatar.id
+      rating.ratable_type.should == avatar.class.name
+    end
+  end
 end
