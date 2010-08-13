@@ -10,8 +10,8 @@ module Mongoid #:nodoc:
       def <<(*objects)
         load_target
         objects.flatten.each do |object|
-          object.send("#{@foreign_key}=", @parent.id)
-          object.send("#{@foreign_type}=", @parent.class.to_s) if @foreign_type
+          object.write_attribute(@foreign_type, @parent.class.to_s) if @foreign_type
+          object.write_attribute(@foreign_key, @parent.id)
           @target << object
           object.save unless @parent.new_record?
         end
@@ -27,7 +27,6 @@ module Mongoid #:nodoc:
       # Returns the newly created object.
       def build(attributes = nil)
         load_target
-
         if @foreign_type
           name = determine_name
           object = @klass.instantiate((attributes || {}).
@@ -36,6 +35,7 @@ module Mongoid #:nodoc:
         else
           name = determine_name
           object = @klass.instantiate((attributes || {}).merge(name => @parent))
+          object.send("#{name}=", @parent)
         end
         @target << object
         object
@@ -47,7 +47,7 @@ module Mongoid #:nodoc:
       # the new object will then be saved.
       #
       # Returns the newly created object.
-      def create(attributes)
+      def create(attributes = nil)
         build(attributes).tap(&:save)
       end
 
@@ -55,7 +55,7 @@ module Mongoid #:nodoc:
       # validation fails an error is raised.
       #
       # Returns the newly created object.
-      def create!(attributes)
+      def create!(attributes = nil)
         build(attributes).tap(&:save!)
       end
 
@@ -134,15 +134,16 @@ module Mongoid #:nodoc:
       def nested_build(attributes, options = {})
         attributes.each do |index, attrs|
           begin
-            document = find(index.to_i)
-            if options && options[:allow_destroy] && attrs['_destroy']
+            _destroy = Boolean.set(attrs.delete('_destroy'))
+            document = find(attrs.delete("id"))
+            if options && options[:allow_destroy] && _destroy
               @target.delete(document)
               document.destroy
             else
-              document.write_attributes(attrs)
+              document.update_attributes(attrs)
             end
           rescue Errors::DocumentNotFound
-            build(attrs)
+            create(attrs)
           end
         end
       end
@@ -242,19 +243,22 @@ module Mongoid #:nodoc:
         protected
         def determine_name(document, options)
           target = document.class
-
           if (inverse = options.inverse_of) && inverse.is_a?(Array)
             inverse = [*inverse].detect { |name| target.respond_to?(name) }
           end
-
           if !inverse and !options.as
-            association = options.klass.associations.values.detect do |metadata|
-              metadata.options.klass == target
-            end
-            inverse = association.name if association
+            association = detect_association(target, options, false)
+            association = detect_association(target, options, true) if association.blank?
+            inferred = association.name if association
           end
+          options.as || inverse || inferred || target.to_s.underscore
+        end
 
-          options.as || inverse || target.to_s.underscore
+        def detect_association(target, options, with_class_name = false)
+          association = options.klass.associations.values.detect do |metadata|
+            metadata.options.klass == target &&
+              (with_class_name ? true : metadata.options[:class_name].nil?)
+          end
         end
       end
     end

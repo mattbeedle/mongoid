@@ -11,31 +11,32 @@ module Mongoid #:nodoc:
       #
       # document: The +Document+ that contains the relationship.
       # options: The association +Options+.
-      def initialize(document, foreign_key, options, target = nil)
+      def initialize(document, options, target = nil)
         @options = options
-        if options.polymorphic
-          @target = document.send("#{options.name}_type").constantize.find(foreign_key)
+
+        if target
+          replace(target)
         else
-          @target = target || options.klass.find(foreign_key)
+          foreign_key = document.send(options.foreign_key)
+          if options.polymorphic
+            replace(document.send("#{options.name}_type").constantize.find(foreign_key))
+          else
+            replace(options.klass.find(foreign_key)) unless foreign_key.blank?
+          end
         end
+
         extends(options)
       end
 
-      class << self
-        # Instantiate a new +ReferencedIn+ or return nil if the foreign key is
-        # nil. It is preferrable to use this method over the traditional call
-        # to new.
-        #
-        # Options:
-        #
-        # document: The +Document+ that contains the relationship.
-        # options: The association +Options+.
-        def instantiate(document, options, target = nil)
-          foreign_key = document.send(options.foreign_key)
-          return nil if foreign_key.blank? && target.nil?
-          new(document, foreign_key, options, target)
-        end
+      # Replaces the target with a new object
+      #
+      # Returns the association proxy
+      def replace(obj)
+        @target = obj
+        self
+      end
 
+      class << self
         # Returns the macro used to create the association.
         def macro
           :referenced_in
@@ -55,11 +56,20 @@ module Mongoid #:nodoc:
         # <tt>ReferencedIn.update(person, game, options)</tt>
         def update(target, document, options)
           document.send("#{options.foreign_key}=", target ? target.id : nil)
-
           if options.polymorphic
             document.send("#{options.foreign_type}=", target ? target.class.to_s : nil)
           end
-          instantiate(document, options, target)
+          new(document, options, target)
+        end
+
+        # Validate the options passed to the referenced in macro, to encapsulate
+        # the behavior in this class instead of the associations module.
+        #
+        # Options:
+        #
+        # options: Thank you captain obvious.
+        def validate_options(options = {})
+          check_dependent_not_allowed!(options)
         end
       end
     end
