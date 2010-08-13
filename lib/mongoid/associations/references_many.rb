@@ -251,10 +251,7 @@ module Mongoid #:nodoc:
             association = detect_association(target, options, true) if association.blank?
             inferred = association.name if association
           end
-<<<<<<< HEAD
 
-=======
->>>>>>> polymorphic
           options.as || inverse || inferred || target.to_s.underscore
         end
 
