@@ -18,7 +18,7 @@ module Mongoid #:nodoc:
           replace(target)
         else
           foreign_key = document.send(options.foreign_key)
-          if options.polymorphic
+          if options.polymorphic && !foreign_key.blank?
             replace(document.send("#{options.name}_type").constantize.find(foreign_key))
           else
             replace(options.klass.find(foreign_key)) unless foreign_key.blank?
