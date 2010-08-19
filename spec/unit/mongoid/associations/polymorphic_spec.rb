@@ -66,6 +66,7 @@ describe Mongoid::Associations::Options do
       end
     end
     let!(:rating) { avatar.ratings.build }
+    let!(:user) { User.create! }
 
     it "appends the document to the association" do
       avatar.ratings.first.should == rating
@@ -75,6 +76,13 @@ describe Mongoid::Associations::Options do
       rating.ratable.should == avatar
       rating.ratable_id.should == avatar.id
       rating.ratable_type.should == avatar.class.name
+    end
+
+    it 'should be able to build a polymorphic associated object' do
+      r = user.ratings.build :ratable => avatar
+      r.ratable.should == avatar
+      r.ratable_id.should == avatar.id
+      r.ratable_type.should == avatar.class.name
     end
   end
 end
