@@ -256,6 +256,7 @@ module Mongoid #:nodoc:
 
         def detect_association(target, options, with_class_name = false)
           association = options.klass.associations.values.detect do |metadata|
+            next if metadata.options.polymorphic
             metadata.options.klass == target &&
               (with_class_name ? true : metadata.options[:class_name].nil?)
           end

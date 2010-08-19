@@ -5,5 +5,6 @@ class Rating
 
   validates_presence_of :ratable
 
-  belongs_to_related :ratable, :polymorphic => true
+  referenced_in :ratable, :polymorphic => true
+  referenced_in :user
 end

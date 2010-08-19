@@ -5,4 +5,5 @@ class User
   field :name
 
   references_many :descriptions
+  references_many :ratings
 end
