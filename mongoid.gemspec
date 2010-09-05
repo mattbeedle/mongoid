@@ -23,7 +23,7 @@ Gem::Specification.new do |s|
   s.add_dependency("mongo", ["= 1.0.7"])
   s.add_dependency("bson", ["= 1.0.7"])
 
-  s.add_development_dependency("bson_ext", ["= 1.0.4"])
+  s.add_development_dependency("bson_ext", ["= 1.0.7"])
   s.add_development_dependency("mocha", ["= 0.9.8"])
   s.add_development_dependency("rspec", ["= 2.0.0.beta.19"])
   s.add_development_dependency("watchr", ["= 0.6"])

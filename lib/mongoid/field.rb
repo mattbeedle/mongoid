@@ -52,7 +52,7 @@ module Mongoid #:nodoc:
         else
           inverse = @options[:klass]
         end
-        object.blank? ? type.set(object) : BSON::ObjectID.cast!(inverse, object)
+        object.blank? ? type.set(object) : BSON::ObjectId.cast!(inverse, object)
       end
     end
 
