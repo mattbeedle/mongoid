@@ -26,7 +26,7 @@ require "mongoid/extensions/string/inflections"
 require "mongoid/extensions/symbol/inflections"
 require "mongoid/extensions/symbol/conversions"
 require "mongoid/extensions/true_class/equality"
-require "mongoid/extensions/objectid/conversions"
+require "mongoid/extensions/object_id/conversions"
 
 class Array #:nodoc
   include Mongoid::Extensions::Array::Accessors
