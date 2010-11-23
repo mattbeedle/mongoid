@@ -25,16 +25,16 @@ module Mongoid #:nodoc:
       # association, and the attributes will be passed into the constructor.
       #
       # Returns the newly created object.
-      def build(attributes = nil)
+      def build(attributes = {},type = nil)
         load_target
         if @foreign_type
           name = determine_name
-          object = @klass.instantiate((attributes || {}).
+          object = (type || @klass).instantiate((attributes || {}).
                                       merge("#{name}_id" => @parent.id,
                                       "#{name}_type" => @parent.class.to_s))
         else
           name = determine_name
-          object = @klass.instantiate((attributes || {}).merge(name => @parent))
+          object = (type || @klass).instantiate(attributes)
           object.send("#{name}=", @parent)
         end
         @target << object
@@ -47,16 +47,16 @@ module Mongoid #:nodoc:
       # the new object will then be saved.
       #
       # Returns the newly created object.
-      def create(attributes = nil)
-        build(attributes).tap(&:save)
+      def create(attributes = nil,type = nil)
+        build(attributes,type).tap(&:save)
       end
 
       # Creates a new Document and adds it to the association collection. If
       # validation fails an error is raised.
       #
       # Returns the newly created object.
-      def create!(attributes = nil)
-        build(attributes).tap(&:save!)
+      def create!(attributes = nil,type = nil)
+        build(attributes,type).tap(&:save!)
       end
 
       # Delete all the associated objects.
@@ -177,11 +177,18 @@ module Mongoid #:nodoc:
         conditions = { @foreign_key => @parent.id }
         @query ||=
           if @foreign_type
-            lambda do
-              @klass.all(:conditions => conditions.merge(@foreign_type => @parent.class.to_s))
-            end
+            lambda {
+              @klass.all(:conditions => { @foreign_key => @parent.id,
+                @foreign_type => @parent.class.to_s }).tap do |crit|
+                  crit.set_order_by(@options.default_order) if @options.default_order
+                end
+            }
           else
-            lambda { @klass.all(:conditions => conditions) }
+            lambda {
+              @klass.all(:conditions => { @foreign_key => @parent.id }).tap do |crit|
+                crit.set_order_by(@options.default_order) if @options.default_order
+              end
+            }
           end
       end
 

@@ -2,9 +2,10 @@
 module Mongoid #:nodoc:
   module Document
     extend ActiveSupport::Concern
-    included do
-      include Mongoid::Components
+    include Mongoid::Components
+    include Mongoid::MultiDatabase
 
+    included do
       attr_accessor :association_name
       attr_reader :new_record
     end
