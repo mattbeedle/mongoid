@@ -49,6 +49,7 @@ describe Mongoid::Associations::Options do
     let!(:rating) { movie.ratings.build }
 
     it "appends the document to the association" do
+      movie.ratings.size.should == 1
       movie.ratings.first.should == rating
     end
 
@@ -60,15 +61,12 @@ describe Mongoid::Associations::Options do
   end
 
   context "when the parent is not new" do
-    let(:avatar) do
-      Movie.new.tap do |movie|
-        movie.instance_variable_set(:@new_record, false)
-      end
-    end
+    let(:avatar) { Movie.create! :name => 'Avatar' }
     let!(:rating) { avatar.ratings.build }
     let!(:user) { User.create! }
 
     it "appends the document to the association" do
+      avatar.ratings.size.should == 1
       avatar.ratings.first.should == rating
     end
 
