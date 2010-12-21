@@ -184,7 +184,7 @@ module Mongoid # :nodoc:
         index(opts.foreign_key, :background => true) if !embedded? && opts.index
         if options[:polymorphic]
           field(opts.foreign_type)
-          index([opts.foreign_key, opts.foreign_type], :background => true) if !embedded? && opts.index
+          index([[opts.foreign_key, opts.foreign_type]], :background => true) if !embedded? && opts.index
         else
           index(opts.foreign_key, :background => true) if !embedded? && opts.index
         end
